@@ -1,0 +1,105 @@
+From df9738d2279c992deaa097e1175c829105b7deaa Mon Sep 17 00:00:00 2001
+From: Dhruval2809 <ddomadiya28@gmail.com>
+Date: Wed, 3 Apr 2024 22:36:44 -0400
+Subject: [PATCH 1/3] Displaying fire originated in Alberta
+
+---
+ q2.html | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/q2.html b/q2.html
+index b049c51..3bb8185 100644
+--- a/q2.html
++++ b/q2.html
+@@ -27,7 +27,8 @@
+         fetch('https://cwfis.cfs.nrcan.gc.ca/geoserver/public/ows?service=WFS&version=1.0.0&request=GetFeature&typeName=public:activefires_current&srsname=EPSG:4326&outputFormat=json')
+             .then(response => response.json())
+             .then(data => {
+-                L.geoJSON(data.features, {
++                var albertaFires = data.features.filter(feature => feature.properties.agency === 'ab')
++                L.geoJSON(albertaFires, {
+                     style: function (feature) {
+                         var options = {
+                             color: '#FF0000',
+-- 
+2.44.0.windows.1
+
+
+From ee0357b7769d480eb917d2b38792dcff668d4c14 Mon Sep 17 00:00:00 2001
+From: Dhruval2809 <ddomadiya28@gmail.com>
+Date: Wed, 3 Apr 2024 22:41:31 -0400
+Subject: [PATCH 2/3] Format fire details in popup
+
+---
+ q2.html | 7 ++++++-
+ 1 file changed, 6 insertions(+), 1 deletion(-)
+
+diff --git a/q2.html b/q2.html
+index 3bb8185..3b6626f 100644
+--- a/q2.html
++++ b/q2.html
+@@ -29,7 +29,7 @@
+             .then(data => {
+                 var albertaFires = data.features.filter(feature => feature.properties.agency === 'ab')
+                 L.geoJSON(albertaFires, {
+-                    style: function (feature) {
++                    style: function (feature) {                    
+                         var options = {
+                             color: '#FF0000',
+                             weight: 2,
+@@ -38,7 +38,12 @@
+                         return options;
+                     },
+                     onEachFeature: function (feature, layer) {
++                        var startDate = new Date(feature.properties.startdate);
++                        var formattedDate = startDate.toLocaleString('en-us', { month: 'short', day: 'numeric', year: 'numeric' });
+                         var popupContent = "<p>"
++                            + "Fire Name: " + feature.properties.firename + "<br/>"
++                            + "Stage of Control: " + feature.properties.stage_of_control + "<br/>"
++                            + "Start Date: " + formattedDate + "<br/>"
+                             + "Size: " + feature.properties.hectares + "<br/>"
+                             + "</p>";
+                         layer.bindPopup(popupContent);
+-- 
+2.44.0.windows.1
+
+
+From ed191ae511627498e98bdce9a5b6be2b294dfdeb Mon Sep 17 00:00:00 2001
+From: Dhruval2809 <ddomadiya28@gmail.com>
+Date: Wed, 3 Apr 2024 22:44:35 -0400
+Subject: [PATCH 3/3] Adjust fire point transparency based on hectares
+
+---
+ q2.html | 13 +++++++++++--
+ 1 file changed, 11 insertions(+), 2 deletions(-)
+
+diff --git a/q2.html b/q2.html
+index 3b6626f..4164682 100644
+--- a/q2.html
++++ b/q2.html
+@@ -30,11 +30,20 @@
+                 var albertaFires = data.features.filter(feature => feature.properties.agency === 'ab')
+                 L.geoJSON(albertaFires, {
+                     style: function (feature) {                    
++                        var fillOpacity;
++                        if (feature.properties.hectares < 1 || feature.properties.hectares === null) {
++                            fillOpacity = 0;
++                        } else if (feature.properties.hectares > 1000) {
++                            fillOpacity = 1;
++                        } else {
++                            fillOpacity = 0.5;
++                        }
++
+                         var options = {
+                             color: '#FF0000',
+                             weight: 2,
+-                            fillOpacity: 0.5
+-                        }
++                            fillOpacity: fillOpacity
++                        };
+                         return options;
+                     },
+                     onEachFeature: function (feature, layer) {
+-- 
+2.44.0.windows.1
+
