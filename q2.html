@@ -29,7 +29,7 @@
             .then(data => {
                 var albertaFires = data.features.filter(feature => feature.properties.agency === 'ab')
                 L.geoJSON(albertaFires, {
-                    style: function (feature) {
+                    style: function (feature) {                    
                         var options = {
                             color: '#FF0000',
                             weight: 2,
@@ -38,7 +38,12 @@
                         return options;
                     },
                     onEachFeature: function (feature, layer) {
+                        var startDate = new Date(feature.properties.startdate);
+                        var formattedDate = startDate.toLocaleString('en-us', { month: 'short', day: 'numeric', year: 'numeric' });
                         var popupContent = "<p>"
+                            + "Fire Name: " + feature.properties.firename + "<br/>"
+                            + "Stage of Control: " + feature.properties.stage_of_control + "<br/>"
+                            + "Start Date: " + formattedDate + "<br/>"
                             + "Size: " + feature.properties.hectares + "<br/>"
                             + "</p>";
                         layer.bindPopup(popupContent);
